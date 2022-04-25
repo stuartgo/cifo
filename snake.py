@@ -130,11 +130,12 @@ class Game:
             game_info.append((self.snake.pos.copy(),self.apple.pos,decision))
         return game_info,self.score
 
-# def random_decision():
-#     return ["left","right",None][random.randint(0,2)]
-# snakey=Snake("ass",100)
+
+
+#run this to save to file that can then be visualized
 # gamey=Game(100,random_decision,snakey)
 # print(gamey.get_state())
-# results=pd.DataFrame(gamey.run())
+#info,score=gamey.run()
+# results=pd.DataFrame(info)
 # results.columns=["Pos. snake","Pos. apple","Decision"]
 # results.to_csv("Random snake.csv")
