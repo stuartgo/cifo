@@ -3,13 +3,25 @@ import time
 import pandas as pd
 import numpy as np
 class Snake:
-    def __init__(self,decision_model,size_game):
+    def __init__(self,decision_model,size_game,weights=None):
         self.pos=[(random.randint(0,size_game-1),random.randint(0,size_game-1))]
         self.len=len(self.pos)
         self.direction="up"
         self.decision_model=decision_model
+        if not weights is None:
+            for index,layer_weights in enumerate(weights):
+                self.decision_model.layers[index].set_weights(layer_weights)
         self.score=0
-    
+        self.weights=self.get_weights()
+        self.size_game=size_game
+        self.game_info=None
+
+
+    def get_weights(self):
+        weights=[]
+        for layer in self.decision_model.layers:
+            weights.append(layer.get_weights())
+        return weights
 
     def set_score(self,score):
         self.score=score
@@ -64,9 +76,6 @@ class Snake:
             self.move_down()
         return keystroke
 
-
-    def eat_apple(self):
-        self.score+=1
 
 
 
@@ -159,6 +168,7 @@ class Game:
             self.distance_score()
             self.check_apple()
             game_info.append((self.snake.pos.copy(),self.apple.pos,decision))
+            self.snake.game_info=game_info
         return game_info
 
 

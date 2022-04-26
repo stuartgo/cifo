@@ -4,9 +4,11 @@ import time
 import random
 import pandas as pd
 import time
-SIZE = 40
-BACKGROUND_COLOR = (110, 110, 5)
-game_data=pd.read_csv("Random snake.csv")
+
+
+
+""
+game_data=pd.read_csv("Best Snake gen14.csv")
 red = (255,0,0)
 green=(0,255,0)
 game_size=100
@@ -22,7 +24,7 @@ def game_step(row):
     pygame.draw.rect(surface, green, pygame.Rect(apple_pos[0]*8, apple_pos[1]*8, 8, 8))
     pygame.display.flip()
     surface.fill((0,0,0))
-    time.sleep(2)
+    time.sleep(0.1)
 
 
 
