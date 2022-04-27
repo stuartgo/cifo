@@ -8,7 +8,7 @@ import time
 
 
 ""
-game_data=pd.read_csv("Best Snake gen14.csv")
+game_data=pd.read_csv("./Snakes/Best Snake gen22.csv")
 red = (255,0,0)
 green=(0,255,0)
 game_size=100

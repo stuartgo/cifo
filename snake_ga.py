@@ -57,7 +57,7 @@ class Snake_Pop:
             best=self.get_best_snake()
             results=pd.DataFrame(best.game_info)
             results.columns=["Pos. snake","Pos. apple","Decision"]
-            results.to_csv("Best Snake gen"+str(counter)+".csv")
+            results.to_csv("./Snakes/Best Snake gen"+str(counter)+".csv")
                 
             self.snakes=new_pop
             counter+=1
@@ -121,6 +121,7 @@ class Snake_Pop:
             probability=(index+1)/len(sorted_snakes)
             if random.random()<=probability:
                 selected_snakes.append(snake)
+        random.shuffle(selected_snakes)
         return selected_snakes
     
     
@@ -196,7 +197,7 @@ class Snake_Pop:
     
 
     
-snakes=Snake_Pop(100,20)
+snakes=Snake_Pop(500,20)
 
-snakes.run_generation(0.5,0.15)
+snakes.run_generation(0.75,0.025)
 

@@ -2,6 +2,7 @@ import random
 import time
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 class Snake:
     def __init__(self,decision_model,size_game,weights=None):
         self.pos=[(random.randint(0,size_game-1),random.randint(0,size_game-1))]
@@ -57,9 +58,11 @@ class Snake:
         self.pos.pop()
         self.pos.insert(0,(current_pos[0]-1,current_pos[1]))
 
+
+
+
     def move(self,state):
-    
-        predictions=self.decision_model.predict(np.array([np.array(state)]))[0]
+        predictions=self.decision_model(np.array([np.array(state)]))[0]
         index=np.where(predictions == np.amax(predictions))[0][0]
         keystroke=[None,"left","right"][index]
         if (keystroke=="left" and self.direction=="up") or (keystroke=="right" and self.direction=="down") or (self.direction=="left",keystroke==None):
@@ -85,7 +88,7 @@ class Apple:
         self.pos=(random.randint(0,size_game-1),random.randint(0,size_game-1))
     
     def move(self):
-        self.pos=(random.randint(0,self.size_game),random.randint(0,self.size_game))
+        self.pos=(random.randint(0,self.size_game-1),random.randint(0,self.size_game-1))
 
 
 class Game:
@@ -125,8 +128,10 @@ class Game:
         Returns:
             _type_: _description_
         """
+        #checks if snake has hit itself
         if self.snake.pos[0] in self.snake.pos[1:]:
             return True
+        #checks if snake has hit wall
         elif self.size_game<self.snake.pos[0][0] or self.snake.pos[0][0]<0 or self.size_game<self.snake.pos[0][1] or self.snake.pos[0][1]<0:
             return True
         return False
@@ -135,7 +140,8 @@ class Game:
         """Checks if apple is where the snake is
         """
         if self.snake.pos[0]==self.apple.pos:
-            self.snake.set_score(self.snake.get_score()+10)
+            self.snake.set_score(self.snake.get_score()+20)
+            self.apple.move()
     
     def get_state(self):
         """Returns the state of the game
