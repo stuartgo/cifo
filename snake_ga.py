@@ -12,7 +12,7 @@ import pandas as pd
 # model.add(Dense(16, input_dim=100,kernel_initializer="random_uniform", activation="relu"))
 # model.add(Dense(3, activation="softmax",kernel_initializer="random_uniform",))
 import multiprocessing as mp
-
+#
 
 class Snake_Pop:
 
