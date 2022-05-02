@@ -180,9 +180,9 @@ class Game:
 
 
 #run this to save to file that can then be visualized
-# gamey=Game(100,random_decision,snakey)
-# print(gamey.get_state())
-#info,score=gamey.run()
-# results=pd.DataFrame(info)
-# results.columns=["Pos. snake","Pos. apple","Decision"]
-# results.to_csv("Random snake.csv")
+gamey=Game(100,random_decision,snakey)
+print(gamey.get_state())
+info,score=gamey.run()
+results=pd.DataFrame(info)
+results.columns=["Pos. snake","Pos. apple","Decision"]
+results.to_csv("Random snake.csv")
