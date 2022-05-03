@@ -6,7 +6,7 @@ import keras
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
 from tqdm import tqdm
-
+import sys
 
 class SnakePop:
     """
@@ -83,12 +83,12 @@ class SnakePop:
                     genetic_operator = "reproduction"
 
                 # select snakes according to the chosen selection method
-                snake_pair = self.ranking()[:2]
+                snake_pair = self.tournament(50)[:2]
 
                 # genetic_operator = "reproduction" # TODO: Delete this line when the crossover issue has been fixed
 
                 if genetic_operator == "crossover":
-                    offspring = self.standard_crossover(snake_pair[0], snake_pair[1])
+                    offspring = self.n_point_standard_crossover(snake_pair[0], snake_pair[1])
                 else:
                     offspring = snake_pair
                 
@@ -191,7 +191,6 @@ class SnakePop:
         selected_snakes = []
         # sort snakes according to their score values
         sorted_snakes = sorted(self.snakes, key = lambda snake: snake.score, reverse = False)
-
         # add snakes to the selected_snakes list
         # snakes with a higher ranking have a higher probability of being in the list
         for index, snake in enumerate(sorted_snakes):
@@ -199,9 +198,8 @@ class SnakePop:
             if random.random() <= probability:
                 selected_snakes.append(snake)
         
-        # choose a random snake in the selected_snakes list
+        # shuffles and returns selected snakes in random order
         random.shuffle(selected_snakes)
-
         return selected_snakes
 
     
@@ -216,13 +214,8 @@ class SnakePop:
         """
 
         random_sample = random.sample(self.snakes, size)
-        best_snake = random_sample[0]
-
-        for snake in random_sample:
-            if snake.score >= best_snake:
-                best_snake = snake
-
-        return best_snake
+        sorted_snakes=sorted(random_sample, key = lambda snake: snake.score, reverse = True)
+        return sorted_snakes
 
 
     # ------------------ #
@@ -284,8 +277,38 @@ class SnakePop:
             new_weights[0].append([np.reshape(complete_flat1,original_shape),layer_weight1[1]])
             new_weights[1].append([np.reshape(complete_flat2,original_shape),layer_weight1[1]])
         return [Snake(snake1.size_game, snake1.decision_model,weights=new_weights[0]),Snake(snake1.size_game, snake1.decision_model,weights=new_weights[1])]
+    
+
+    def n_point_standard_crossover(self,snake1,snake2):
+        #as we are using multiple layers the crossover is repeated for each layer
+        weights1=snake1.weights
+        weights2=snake2.weights
+        #one list for the weights of each of the two offspring
+        new_weights=[[],[]]
+        for layer_num in range(len(weights1)):
+            layer_weight1=weights1[layer_num]
+            layer_weight2=weights2[layer_num]
+            if layer_weight1==[]:
+                new_weights[0].append([])
+                new_weights[1].append([])
+                continue
+            original_shape=np.array(layer_weight1[0]).shape
+            weights_flat1=np.array(layer_weight1[0]).flatten()
+            weights_flat2=np.array(layer_weight2[0]).flatten()
+            new_weights_temp1=np.zeros(len(weights_flat1))
+            new_weights_temp2=np.zeros(len(weights_flat1))
+            for index,k in enumerate(weights_flat1):
+                if random.random()<=0.5:
+                    new_weights_temp1[index]=k
+                    new_weights_temp2[index]=weights_flat2[index]
+                else:
+                    new_weights_temp2[index]=k
+                    new_weights_temp1[index]=weights_flat2[index]
+            new_weights[0].append([np.reshape(new_weights_temp1,original_shape),layer_weight1[1]])
+            new_weights[1].append([np.reshape(new_weights_temp2,original_shape),layer_weight1[1]])
+        return [Snake(snake1.size_game, snake1.decision_model,weights=new_weights[0]),Snake(snake1.size_game, snake1.decision_model,weights=new_weights[1])]
 
 
-snakes = SnakePop(500, 20, optim = "max")
+snakes = SnakePop(500, 10, optim = "max")
 
 snakes.evolve(1000, 0.75, 0.05)

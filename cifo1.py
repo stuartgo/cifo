@@ -56,7 +56,10 @@ class Snake:
             for index, layer_weights in enumerate(weights):
                 self.decision_model.layers[index].set_weights(layer_weights)
         # get weights of the layers
-        self.weights = self.get_weights()
+        if self.decision_model=="random":
+            self.weights=None
+        else:
+            self.weights = self.get_weights()
 
 
     def get_weights(self):
@@ -107,9 +110,12 @@ class Snake:
         """
 
         # determine direction in which to move based on the output of the decision model
-        predictions = self.decision_model(np.array([np.array(state)]))[0]
-        index = np.where(predictions == np.amax(predictions))[0][0]
-        keystroke = [None, "left", "right"][index]
+        if self.decision_model=="random":
+            keystroke=random.choice([None, "left", "right"])
+        else:
+            predictions = self.decision_model(np.array([np.array(state)]))[0]
+            index = np.where(predictions == np.amax(predictions))[0][0]
+            keystroke = [None, "left", "right"][index]
 
         # store current position of the head
         current_pos = self.pos[0]
@@ -119,73 +125,36 @@ class Snake:
         if (
             (keystroke == "left" and self.direction == "up")
             or (keystroke == "right" and self.direction == "down")
-            or (self.direction == "left", keystroke == None)
+            or (self.direction == "left" and keystroke == None)
         ):
             self.direction = "left"
             self.pos.insert(0, (current_pos[0]-1, current_pos[1]))
+            
         elif (
             (keystroke == "left" and self.direction == "down")
             or (keystroke == "right" and self.direction == "up")
-            or (self.direction == "right", keystroke == None)
+            or (self.direction == "right" and keystroke == None)
         ):
             self.direction = "right"
             self.pos.insert(0, (current_pos[0]+1, current_pos[1]))
         elif (
             (keystroke == "left" and self.direction == "right")
             or (keystroke == "right" and self.direction == "left")
-            or (self.direction == "up", keystroke == None)
+            or (self.direction == "up" and keystroke == None)
         ):
             self.direction = "up"
-            self.pos.insert(0, current_pos[0], current_pos[1]+1)
+            self.pos.insert(0, (current_pos[0], current_pos[1]+1))
         elif (
             (keystroke == "left" and self.direction == "left")
             or (keystroke == "right" and self.direction == "right")
-            or (self.direction == "down", keystroke == None)
+            or (self.direction == "down" and keystroke == None)
         ):
             self.direction = "down"
             self.pos.insert(0, (current_pos[0], current_pos[1]-1))
-
         return keystroke
         
 
-class Apple:
-    """
-    A class to represent an apple of the game board.
 
-    ...
-
-    Attributes
-    ----------
-    size_game: int
-        size of the game board (e.g., 20) 
-    init: tuple
-        initial position of the apple (e.g., (4, 6))
-        assigned randomly if left unspecified    
-    """
-
-    def __init__(self, size_game, init = None):
-
-        self.size_game = size_game
-
-        # choose random position of the board for the apple to spawn if none is specified
-        if init == None:
-            self.pos = (
-                random.randint(0, size_game-1),
-                random.randint(0, size_game-1)
-            )
-        else:
-            self.pos = (
-                init[0],
-                init[1]
-            )
-    
-
-    def move(self):
-        # spawn a new apple at a random location of the game board
-        self.pos = (
-            random.randint(0, self.size_game-1),
-            random.randint(0, self.size_game-1)
-        )
 
 
 class Game:
@@ -205,10 +174,19 @@ class Game:
 
     def __init__(self, size_game, snake):
         self.snake = snake
-        self.apple = Apple(size_game)
+        self.apple = (
+                random.randint(0, size_game-1),
+                random.randint(0, size_game-1)
+            )
         self.size_game = size_game
         self.distance_apple = self.calc_distance()
 
+
+    def move_apple(self):
+        self.apple = (
+                random.randint(0, self.size_game-1),
+                random.randint(0, self.size_game-1)
+            )
 
     def check_loss(self):
         """
@@ -217,12 +195,13 @@ class Game:
         """
 
         # check if snake has hit itself
-        if self.snake.pos[0] in self.snake.pos[1:]:
-            return True
+        if len(self.snake.pos)>1:
+            if self.snake.pos[0] in self.snake.pos[1:]:
+                return True
         # check if snake has hit a wall (game border)
-        elif (
-            (self.size_game < self.snake.pos[0][0])
-            or (self.size_game < self.snake.pos[0][1])
+        if (
+            (self.size_game <= self.snake.pos[0][0])
+            or (self.size_game <= self.snake.pos[0][1])
             or (self.snake.pos[0][0] < 0)
             or (self.snake.pos[0][1] < 0)
         ):
@@ -238,9 +217,9 @@ class Game:
         """
         
         # increases score by 20 if snake eats an apple and changes its location
-        if self.snake.pos[0] == self.apple.pos:
+        if self.snake.pos[0] == self.apple:
             self.snake.set_score(self.snake.get_score() + 20)
-            self.apple.move()
+            self.move_apple()
 
 
     def calc_distance(self):
@@ -254,7 +233,7 @@ class Game:
             manhattan distance between the snake's head and the apple
         """
 
-        distance = abs(self.snake.pos[0][0] - self.apple.pos[0]) + abs(self.snake.pos[0][1]-self.apple.pos[1])
+        distance = abs(self.snake.pos[0][0] - self.apple[0]) + abs(self.snake.pos[0][1]-self.apple[1])
 
         return distance
 
@@ -271,7 +250,7 @@ class Game:
             self.snake.set_score(self.snake.get_score()+1)
         # decreases score if snake is moving farther away from the apple
         else:
-            self.snake.set_score(self.snake.get_score()-1)
+            self.snake.set_score(self.snake.get_score()-2)
         self.distance_apple = new_distance
 
 
@@ -285,12 +264,11 @@ class Game:
             0 for all points on map, 1 where snake is present and 2 where apple is??????
         """
 
-        state = [0]*(self.size_game)
-        state = [state.copy() for _ in range(self.size_game)]
+        state = np.zeros((self.size_game,self.size_game))
 
         for snake_point in self.snake.pos:
             state[snake_point[0]][snake_point[1]] = 1
-        apple = self.apple.pos
+        apple = self.apple
         state[apple[0]][apple[1]] = 2
 
         return state
@@ -309,27 +287,35 @@ class Game:
         """
 
         game_info = []
-
+        previous_states=[]
         while True:
-            decision = self.snake.move(state = self.get_state())
-
-            # stop the game and apply score penalty if snake encounters a losing condition
             if self.check_loss():
                 self.snake.set_score(self.snake.get_score() - 100)
+                lost=True
                 break
+            state=self.get_state()
+            for prev_state in previous_states:
+                if np.array_equal(state,prev_state):
+                    self.snake.set_score(self.snake.get_score() - 1000)
+                    return game_info
+            previous_states.append(state)
+            decision = self.snake.move(state = state)
+
             self.distance_score()
             self.check_apple()
-            game_info.append((self.snake.pos.copy(), self.apple.pos, decision))
+            game_info.append((self.snake.pos.copy(), self.apple, decision))
             self.snake.game_info = game_info
+            
 
         return game_info
 
 
 
 # run this to save to file that can then be visualized
-# gamey=Game(100,random_decision,snakey)
-# print(gamey.get_state())
-# info,score=gamey.run()
+# snakey=Snake(20,"random")
+# gamey=Game(100,snakey)
+# info=gamey.run()
 # results=pd.DataFrame(info)
 # results.columns=["Pos. snake","Pos. apple","Decision"]
 # results.to_csv("Random snake.csv")
+# print("done")
