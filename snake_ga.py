@@ -18,9 +18,9 @@ class Snake_Pop:
 
     def __init__(self,pop_size,size_game):
         model = Sequential()
-        model.add(Flatten(input_shape=(size_game,size_game))),
+        model.add(Flatten(input_shape=(3,size_game,size_game))),
         model.add(Dense(8,kernel_initializer="random_uniform", activation="relu"))
-        model.add(Dense(3, activation="softmax",kernel_initializer="random_uniform"))
+        model.add(Dense(4, activation="softmax",kernel_initializer="random_uniform"))
         self.snakes=[Snake(keras.models.clone_model(model),size_game) for _ in range(pop_size)]
         self.size_game=size_game
         self.pop_size=pop_size
@@ -104,7 +104,7 @@ class Snake_Pop:
         lowest_score=abs(self.get_worst_snake().score)
         for snake in self.snakes:
             #+1 is added to not get 0 scores
-            probability=(snake.score+lowest_score+1)/abs(self.get_sum_scores())
+            probability=abs(snake.score+lowest_score+1)/abs(self.get_sum_scores()) #TODO: look into
             if random.random()<=probability:
                 selected_snakes.append(snake)
         return selected_snakes
@@ -159,6 +159,7 @@ class Snake_Pop:
             #using min and max to define what is an admissable value
             min_val=np.amin(weights_flat)
             max_val=np.amax(weights_flat)
+            #TODO: CHeck various scenarios
             #modify each weight with probability mutation rate
             #if modified a random value between min and max value of the existing weights is used
             for index,gene in enumerate(weights_flat):
