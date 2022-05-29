@@ -94,9 +94,6 @@ class GAAgent(object):
         return self.model.get_weights()
 
 
-#copied
-#TODO: can probably be rewritten so it always returns the same model as we arent varying the NN, not sure I understood the model.layers setweights part, why should it be model.layers[-1]
-
 # create a keras model given the layers' structure and weights matrix
 def create_model_from_units(units, weights):
     if len(units) < 2:
@@ -170,7 +167,7 @@ def best_snake_weights(population_name, generation, pop_size):
     weights = population[int(best_snake)]
     return weights
 
-#copied
+
 # use a model to play a game and return model fitness score
 def run_game(model):
     # parameters to initialise the game
