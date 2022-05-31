@@ -88,7 +88,7 @@ class GAAgent(object):
             else:
                 state[i] = 0
         
-        return np.asarray(state).reshape(1, self.dim_state)
+        return  np.asarray(state).reshape(1, self.dim_state)
 
     def get_weights(self):
         return self.model.get_weights()
@@ -96,9 +96,6 @@ class GAAgent(object):
 
 # create a keras model given the layers' structure and weights matrix
 def create_model_from_units(units, weights):
-    if len(units) < 2:
-        print("Error: A model has to have at least 2 layers (input and output layer)")
-        return None
     model = Sequential()
     added_weights = 0
     layers = len(units)  # considering input layer and first hidden layer are created at the same time
@@ -113,6 +110,7 @@ def create_model_from_units(units, weights):
         weight = weights[added_weights:added_weights+units[i-1]*units[i]].reshape(units[i-1], units[i])
         added_weights += units[i-1]*units[i]
         model.layers[-1].set_weights((weight, np.zeros(units[i])))
+ 
     return model
 
 
@@ -134,7 +132,7 @@ def cal_pop_fitness(new_population, units, population):
         #model is created with the shape of the NN and the weights
         model = create_model_from_units(units, weights)
         #game runs and stats are stored
-        fit, snake_deaths, snake_avg_score, record = run_game2(model)
+        fit, snake_deaths, snake_avg_score, record = run_game(model)
         snake_avg_score = round(snake_avg_score, 2)
         print('fitness value of snake ' + str(i) + ':  ' + str(fit) +
               '   Deaths: ' + str(snake_deaths) + '   Avg score: ' + str(snake_avg_score) + '   Record: ' + str(record))
@@ -455,7 +453,7 @@ def tournament_min(pop, fitness, num_parents,tournament_size):
 
 
 
-def run_models(mutation,crossover, selection,start_gen=0,maximisation=True):
+def run_models(mutation,crossover, selection,pop_num,start_gen=0,maximisation=True):
     units = [12, 32, 4]  # no. of input units, no. of units in hidden layer n, no. of output units
     population = 50  # parameter: population
     num_weights = weights_size(units)  # weights of a single model (snake)
@@ -463,9 +461,9 @@ def run_models(mutation,crossover, selection,start_gen=0,maximisation=True):
     #  creating the initial weights
     new_population = np.random.choice(np.arange(-1, 1, step=0.01), size=pop_size, replace=True)
     num_generations =15  # parameter: number of generations
-    num_parents_mating = 12  # parameter: number of best parents selected for crossover
+    num_parents_mating = 12 # parameter: number of best parents selected for crossover
     checkpoint = 5  # parameter: how many generations between saving weights
-    population_name = mutation+"_"+crossover+"_"+selection  # parameter: name of the population
+    population_name = mutation+"_"+crossover+"_"+selection +str(pop_num)  # parameter: name of the population
     current_gen = start_gen  # parameter: last finished generation
 
     # restore weights from previous generation
@@ -493,7 +491,7 @@ def run_models(mutation,crossover, selection,start_gen=0,maximisation=True):
         # selecting the best parents in the population for mating
         if maximisation:
             if selection=="tournament":
-                parents = tournament(new_population, fitness, num_parents_mating,15)
+                parents = tournament(new_population, fitness, num_parents_mating,10)
             elif selection=="fps":
                 parents = fps(new_population, fitness, num_parents_mating)
             elif selection=="ranking":
@@ -520,7 +518,7 @@ def run_models(mutation,crossover, selection,start_gen=0,maximisation=True):
         if mutation=="creep":
             offspring_mutation = creep_mutation(offspring_crossover, 0.1)   
         elif mutation=="standard":
-            offspring_mutation = standard_mutation(offspring_crossover, 0.05)  
+            offspring_mutation = standard_mutation(offspring_crossover, 0.1)  
         elif mutation=="geometric":
             offspring_mutation = geometric_semantic_mutation(offspring_crossover, 0.1)  
 
@@ -548,11 +546,17 @@ def run_models(mutation,crossover, selection,start_gen=0,maximisation=True):
 
 
 
-selected_models=[("creep","standard","tournament"),("creep","uniform","tournament"),("standard","geometric","tournament"),("standard","uniform","tournament"),("creep","geometric","tournament"),("geometric","geometric","tournament")]
+# selected_models=[("creep","standard","tournament"),("creep","uniform","tournament"),("standard","geometric","tournament"),("standard","uniform","tournament"),("creep","geometric","tournament"),("geometric","geometric","tournament")]
 
-for model in selected_models:
-    print("#######################################")
-    print(model)
-    run_models(model[0],model[1],"ranking",maximisation=False)
+for mutation in ["creep","standard","geometric"]:
+    for crossover in ["uniform","standard","geometric"]:
+        for selection in ["tournament","fps","ranking"]:
+            for i in range(0,30):
+                run_models(mutation,crossover,selection,i)
+
+
+
+    
+
 
 
